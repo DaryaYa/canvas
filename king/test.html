@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>King</title>
+</head>
+
+<body>
+	<style>
+		body {
+			background: white;
+		}
+		
+		.king {
+			margin: 100px auto 0;
+			width: 160px;
+			height: 160px;
+			background: url(king.png) 0 0 no-repeat;
+		}
+		
+		.run {
+			animation: run .8s infinite step-end;
+		}
+		
+		.left {
+			transform: scaleX(-1);
+		}
+		
+		@keyframes run {
+			0% {
+				background-position: -160px 0;
+			}
+			25% {
+				background-position: 0 0;
+			}
+			50% {
+				background-position: -320px 0;
+			}
+			75% {
+				background-position: 0 0;
+			}
+		}
+	</style>
+	<div id="main">
+		<div class="king"></div>
+	</div>
+	<script src="script.js"></script>
+</body>
+
+</html>

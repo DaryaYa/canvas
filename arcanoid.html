@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Canvas Test Game</title>
+    <style>
+        * {
+            padding: 0px;
+            margin: 0;
+        }
+        
+        #myCanvas {
+            background: #f5f371;
+            display: block;
+            margin: 10px auto;
+        }
+    </style>
+</head>
+
+<body>
+
+    <canvas id="myCanvas" width="480" height="320"></canvas>
+    <script>
+        var canvas = document.getElementById("myCanvas");
+        var ctx = canvas.getContext("2d");
+        //---start point, moves, direction, radius of the ball
+        var x = canvas.width / 2;
+        var y = canvas.height - 20;
+        var dx = 2;
+        var dy = -2;
+        var ballRadius = 12;
+        // --- the paddle and starting point on the X axis
+        var paddleHeight = 12;
+        var paddleWidth = 90;
+        var paddleX = (canvas.width - paddleWidth) / 2; // top-left corner of the paddle by default
+        // ----- the controls by default;
+        var rightPressed = false;
+        var leftPressed = false;
+        // --------  bricks
+        var brickRowCount = 3;
+        var brickColumnCount = 5;
+        var brickWidth = 75;
+        var brickHeight = 20;
+        var brickPadding = 12;
+        var brickOffsetTop = 30;
+        var brickOffsetLeft = 30;
+        //--- lives
+        var lives = 3;
+        // --- the arrey with bricks 
+        var bricks = [];
+        for (var c = 0; c < brickColumnCount; c++) {
+            bricks[c] = [];
+            for (var r = 0; r < brickRowCount; r++) {
+                bricks[c][r] = {
+                    x: 0,
+                    y: 0,
+                    status: 1
+                };
+            }
+        }
+        // ---the score
+        var score = 0;
+        //  ----  events 
+        document.addEventListener("keydown", keyDownHandler, false);
+        document.addEventListener("keyup", keyUpHandler, false);
+        document.addEventListener("mousemove", mouseMoveHandler, false);
+
+        // ---- conditions of pressed or unpressed controls 
+        function keyDownHandler(e) {
+            if (e.key == "Right" || e.key == "ArrowRight") {
+                rightPressed = true;
+            } else if (e.key == "Left" || e.key == "ArrowLeft") {
+                leftPressed = true;
+            }
+        }
+
+        function keyUpHandler(e) {
+            if (e.key == "Right" || e.key == "ArrowRight") {
+                rightPressed = false;
+            } else if (e.key == "Left" || e.key == "ArrowLeft") {
+                leftPressed = false;
+            }
+        }
+        // -----func which answer the mouse movements
+        function mouseMoveHandler(e) {
+            var relativeX = e.clientX - canvas.offsetLeft; // the horizontal mouse position in the viewport  --- (e.clientX)
+            //the distance between the left edge of the canvas and left edge of the viewport -- (canvas.offsetLeft)
+            if (relativeX > 0 && relativeX < canvas.width) {
+                paddleX = relativeX - paddleWidth / 2;
+            }
+        }
+        // ------ func which detects the hits of the ball with the bricks
+        function collisionDetection() {
+            for (var c = 0; c < brickColumnCount; c++) {
+                for (var r = 0; r < brickRowCount; r++) {
+                    var b = bricks[c][r];
+                    if (b.status == 1) {
+                        if (x > b.x && x < b.x + brickWidth && y > b.y && y < b.y + brickHeight) {
+                            dy = -dy;
+                            b.status = 0;
+                            score += 2;
+                            if (score == 2 * brickColumnCount * brickRowCount) {
+                                alert(" You Won, CONGRATULATIONS! Your score is " + score);
+                                document.location.reload();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        //-------the func draws the ball
+        function drawBall() {
+            ctx.beginPath();
+            ctx.arc(x, y, ballRadius, 0, Math.PI * 2); // the ball itself
+            /*var colors = ['#d80808', '#ef0909', '#ef3709', '#ef5a09', '#ef7409', '#ed0b0b', '#f73131'];
+
+            function randomDiap(n, m) {
+                return Math.floor(Math.random() * (m - n)) + n;
+            }
+
+            ctx.fillStyle = colors[randomDiap(0, 6)]; //random color from the arrey */
+            ctx.fillStyle = '#ef5a09';
+            ctx.fill();
+            ctx.closePath();
+        }
+        // --------the func draws the paddle
+        function drawPaddle() {
+            ctx.beginPath();
+            ctx.rect(paddleX, canvas.height - paddleHeight, paddleWidth, paddleHeight);
+            ctx.fillStyle = "#042df7";
+            ctx.fill();
+            ctx.closePath();
+        }
+        // --- the func which draws the the bricks
+        function drawBricks() {
+            for (var c = 0; c < brickColumnCount; c++) {
+                for (var r = 0; r < brickRowCount; r++) {
+                    if (bricks[c][r].status == 1) {
+                        var bricksX = (c * (brickWidth + brickPadding)) + brickOffsetLeft;
+                        var bricksY = (r * (brickHeight + brickPadding)) + brickOffsetTop;
+                        bricks[c][r].x = bricksX;
+                        bricks[c][r].y = bricksY;
+                        ctx.beginPath();
+                        ctx.rect(bricksX, bricksY, brickWidth, brickHeight);
+                        ctx.fillStyle = '#05c105';
+                        ctx.fill();
+                        ctx.closePath;
+                    }
+                }
+            }
+        }
+        // ------- func to count and display the score 
+        function drawScore() {
+            ctx.font = "18px Ariel";
+            ctx.fillStyle = "#af1d7c";
+            ctx.fillText("Score: " + score, 20, 20);
+        }
+        // ----the counting of lives function
+        function drawLives() {
+            ctx.font = "16px Arial";
+            ctx.fillStyle = "#0095dd";
+            ctx.fillText("Lives: " + lives, canvas.width - 75, 20);
+        }
+        //  -------- the main drawing func 
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height); //the cleaning of the field in each ball movement
+            drawBall();
+            drawScore();
+            drawLives();
+            collisionDetection();
+            drawBricks();
+            drawPaddle();
+            x += dx; //each NEXT step of the ball on the X axis
+            y += dy; //...Y axis
+
+            if (x + dx > canvas.width - ballRadius || x + dx < ballRadius) // left-right borders set for the ball 
+            {
+                dx = -dx;
+            }
+            // -------- top and bottom borders, and paddle with the ball interaction
+            if (y + dy < ballRadius) {
+                dy = -dy;
+            } else if (y + dy > canvas.height - ballRadius - paddleHeight) {
+                if (x > paddleX && x < paddleX + paddleWidth) {
+                    dy = -dy;
+                } else {
+                    lives--;
+                    if (!lives) {
+                        alert("GAME OVER");
+                        document.location.reload();
+                        clearInterval(interval); // Needed for Chrome to end game
+                    } else {
+                        x = canvas.width / 2;
+                        y = canvas.height - 30;
+                        dx = 2;
+                        dy = -2;
+                        paddleX = (canvas.width - paddleWidth) / 2;
+                    }
+                }
+            }
+            // ----------  the moves of the paddle by pressing the controles 
+            if (rightPressed && paddleX < canvas.width - paddleWidth) {
+                paddleX += 15;
+            }
+            if (leftPressed && paddleX > 0) {
+                paddleX -= 15;
+            }
+            requestAnimationFrame(draw);
+        }
+
+        draw();
+    </script>
+</body>
+
+</html>
